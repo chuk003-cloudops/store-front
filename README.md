@@ -1,42 +1,20 @@
-# Store-Front
+# Store Front
 
-The store-front is the Vue.js frontend that allows users to select products and place orders.
+The Store Front is the Vue.js client for browsing products and placing orders. In Lab 2 it runs on its own Azure VM; the browser on your laptop calls the Product and Order Service VMs using their public IPs.
 
-## Requirements
+## Configuration
 
-- Node.js 24 LTS and npm (installed in the Order Service guide)
-- Product and Order services running
-- Start inside the repository's `store-front` directory. The main guide already takes you there.
+Create a local .env file in the repository root before starting the development server:
 
-## Setup Instructions
+VUE_APP_ORDER_SERVICE_URL=http://ORDER_SERVICE_VM_PUBLIC_IP:3000
+VUE_APP_PRODUCT_SERVICE_URL=http://PRODUCT_SERVICE_VM_PUBLIC_IP:3030
 
-1. Install the versions recorded in the committed lockfile:
+Replace the placeholder host names above with the public IPs recorded in Azure. Keep .env out of Git; .env.example contains placeholders only. Vue CLI embeds VUE_APP_ values when the development server starts, so restart npm run serve after changing them. Do not put RabbitMQ credentials in the Store Front; these URLs are visible to the browser.
 
-   ```bash
-   npm ci
-   ```
+## Install and run
 
-2. **Configure the API URLs before starting the Store Front.**
+On the Store Front VM, install Node.js 24 LTS and npm. From this repository root, run npm ci and npm run serve. The service listens on port 8080. Its NSG should allow TCP 8080 only from the laptop public IP. Keep vue.config.js and the public directory from the Lab 1 starting point.
 
-   For an Azure VM, open `src/components/OrderForm.vue` and replace the two URL strings in the `fetch(...)` calls:
+## Verify
 
-   | Original URL                     | Replacement                           |
-   | -------------------------------- | ------------------------------------- |
-   | `http://localhost:3030/products` | `http://<VM-PUBLIC-IP>:3030/products` |
-   | `http://localhost:3000/orders`   | `http://<VM-PUBLIC-IP>:3000/orders`   |
-
-   Substitute your VM's actual public IP for `<VM-PUBLIC-IP>`. For a local installation, keep both localhost URLs.
-
-   Your browser runs on your laptop. Its `localhost` points to that laptop; using the VM's public IP sends API requests to your VM. The development WebSocket automatically uses the address in your browser.
-
-3. Start the Store Front:
-
-   ```bash
-   npm run serve
-   ```
-
-   Keep this terminal open; do not start a second copy from the main guide.
-
-4. Open `http://<VM-PUBLIC-IP>:8080` for Azure, or `http://localhost:8080` locally. On Azure, use the public IP you saved in the portal, even if the terminal's Network URL shows a private IP.
-
-Select one product, enter a positive quantity, and click **Place Order**. Two units of Dog Food should total **$39.98**. Verify the queued message using the RabbitMQ guide and check the browser console for errors.
+Open http://STORE_FRONT_VM_PUBLIC_IP:8080 in the laptop browser, substituting the actual public IP. Confirm that products load, select Dog Food, enter quantity 2, and verify the $39.98 total. Click Place Order, then check RabbitMQ's durable order_queue message count on the RabbitMQ VM. Check the browser console for API or WebSocket errors.
