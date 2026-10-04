@@ -1,0 +1,42 @@
+name: Build and deploy Vue storefront
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_deploy_job:
+    runs-on: ubuntu-latest
+    env:
+      VUE_APP_ORDER_SERVICE_URL: https://chuk8915order.azurewebsites.net
+      VUE_APP_PRODUCT_SERVICE_URL: https://chuk8915product.azurewebsites.net
+      SWA_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storefront-dist
+          path: dist
+      - name: Deploy to Azure Static Web Apps
+        if: env.SWA_TOKEN != ''
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ env.SWA_TOKEN }}
+          action: upload
+          app_location: dist
+          api_location: ''
+          output_location: ''
+          skip_app_build: true
+      - name: Report deployment prerequisite
+        if: env.SWA_TOKEN == ''
+        run: echo 'Build artifact is ready. Static Web Apps deployment requires a supported Azure subscription and its deployment token.'
