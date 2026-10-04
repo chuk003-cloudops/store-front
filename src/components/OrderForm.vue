@@ -33,7 +33,7 @@
       <!-- Quantity input field -->
       <div v-if="selectedProduct" class="quantity-container">
         <label for="quantity">Quantity:</label>
-        <input type="number" v-model="quantity" min="1" placeholder="Enter quantity" />
+        <input id="quantity" type="number" v-model="quantity" min="1" placeholder="Enter quantity" />
       </div>
 
       <!-- Total Price Display -->
@@ -41,7 +41,8 @@
         <h3>Total Price: ${{ totalPrice.toFixed(2) }}</h3>
       </div>
 
-      <button @click="submitOrder" :disabled="!selectedProduct || quantity <= 0" class="order-button">Place Order</button>
+      <button @click="submitOrder" :disabled="placingOrder || !selectedProduct || quantity <= 0" class="order-button">{{ placingOrder ? 'Placing Order...' : 'Place Order' }}</button>
+      <p v-if="orderMessage" role="status" class="order-status">{{ orderMessage }}</p>
     </div>
 
     <!-- Loading message if no products are fetched yet -->
@@ -58,6 +59,8 @@ export default {
       products: [],
       selectedProduct: null,
       quantity: 1,  // Initialize quantity with a default value of 1
+      placingOrder: false,
+      orderMessage: '',
     };
   },
   async created() {
@@ -84,10 +87,12 @@ export default {
     },
     async submitOrder() {
       if (!this.selectedProduct || this.quantity <= 0) {
-        alert('Please select a product and enter a valid quantity.');
+        this.orderMessage = 'Please select a product and enter a valid quantity.';
         return;
       }
 
+      this.placingOrder = true;
+      this.orderMessage = '';
       try {
         const response = await fetch(`${process.env.VUE_APP_ORDER_SERVICE_URL}/orders`, {
 
@@ -106,10 +111,12 @@ export default {
           throw new Error(`Server error: ${response.status}`);
         }
 
-        alert(`Order for ${this.quantity} x ${this.selectedProduct.name} placed successfully! Total: $${this.totalPrice.toFixed(2)}`);
+        this.orderMessage = `Order for ${this.quantity} x ${this.selectedProduct.name} placed successfully! Total: $${this.totalPrice.toFixed(2)}`;
       } catch (error) {
         console.error('Error placing order:', error);
-        alert('Failed to place order.');
+        this.orderMessage = 'Failed to place order. Please try again.';
+      } finally {
+        this.placingOrder = false;
       }
     }
   }
@@ -229,5 +236,12 @@ input[type="number"] {
 
 .order-button:hover:enabled {
   background-color: #2e7d32;
+}
+
+.order-status {
+  padding: 12px;
+  border: 1px solid #42b983;
+  border-radius: 6px;
+  background: #fff;
 }
 </style>
