@@ -1,6 +1,23 @@
 # Store Front
 
-The Store Front is the Vue.js client for browsing products and placing orders. In Lab 2 it runs on its own Azure VM; the browser on your laptop calls the Product and Order Service VMs using their public IPs.
+The Store Front is the Vue.js client for browsing products and placing orders. Lab 2 ran it on its own Azure VM. Lab 3 builds it against the Product and Order Service Azure App Service endpoints.
+
+## Lab 3 deployment
+
+The GitHub Actions workflow at `.github/workflows/azure-static-web-apps.yml` declares these build-time values:
+
+```text
+VUE_APP_ORDER_SERVICE_URL=https://chuk8915order.azurewebsites.net
+VUE_APP_PRODUCT_SERVICE_URL=https://chuk8915product.azurewebsites.net
+```
+
+The workflow runs `npm ci` and `npm run build`, then retains the `dist` artifact. If `AZURE_STATIC_WEB_APPS_API_TOKEN` is configured, it deploys that artifact to Azure Static Web Apps. The token is a GitHub secret; it is not committed to source.
+
+Azure for Students currently limits this subscription to regions that do not support Static Web Apps. A compatible App Service backup is deployed at `https://chuk8915storefront.azurewebsites.net/`, using `server.js` to serve the same compiled Vue files on the existing Free F1 plan. This is an explicit deviation from the assignment's Static Web Apps requirement, not a claim that a Static Web App was created. The exact deployment requires a supported subscription or an instructor-approved exception.
+
+The backup uses `node /home/site/wwwroot/server.js` as its startup command. Product loading and an order through the App Service backend into RabbitMQ have been verified in the browser.
+
+## Lab 2 local and VM setup
 
 ## Configuration
 
